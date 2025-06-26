@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
+        .hidden { display: none; }
+        .correct { color: green; font-weight: bold; }
+        .wrong { color: red; font-weight: bold; }
+        .header { background: #007bff; color: white; padding: 10px 0; }
+        .footer { background: #007bff; color: white; padding: 10px 0; position: fixed; bottom: 0; width: 100%; }
+        .btn-option { display: block; width: 100%; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Quiz App</h2>
+    </div>
+    
+    <div class="container mt-4">
+        <div id="topic-selection" class="text-center">
+            <label for="topics" class="form-label">Choose a topic:</label>
+            <select id="topics" class="form-select mb-3">
+                <option value="math">Math</option>
+                <option value="science">Science</option>
+                <option value="history">History</option>
+                <option value="literature">Literature</option>
+                <option value="astronomy">Astronomy</option>
+            </select>
+            <label for="question-count" class="form-label">Number of Questions:</label>
+            <select id="question-count" class="form-select mb-3">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+            </select>
+            <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+        
+        <div id="quiz-container" class="hidden text-center">
+            <p id="question" class="fw-bold"></p>
+            <div id="options"></div>
+            <p id="feedback" class="mt-2"></p>
+            <button class="btn btn-secondary mt-2" onclick="nextQuestion()">Next</button>
+        </div>
+        
+        <div id="result" class="hidden mt-4 fw-bold"></div>
+        
+        <button id="restart-btn" class="btn btn-primary mt-3 hidden" onclick="restartQuiz()">Restart Quiz</button>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2025 Quiz App. All rights reserved.</p>
+    </div>
+
+    <script>
+        const questions = {
+            math: [
+                { q: "What is 12 x 12?", options: ["144", "122", "132"], answer: "144" },
+                { q: "What is the square root of 81?", options: ["7", "9", "11"], answer: "9" },
+                { q: "What is 15% of 200?", options: ["20", "25", "30"], answer: "30" },
+                { q: "Solve: 5! (5 factorial)", options: ["60", "120", "24"], answer: "120" },
+                { q: "What is 3^4 (3 raised to power 4)?", options: ["81", "64", "27"], answer: "81" },
+                { q: "What is the derivative of x^2?", options: ["2x", "x^2", "x"], answer: "2x" },
+                { q: "Convert 0.75 into a fraction.", options: ["3/4", "2/5", "5/8"], answer: "3/4" },
+                { q: "What is 7 cubed?", options: ["343", "729", "512"], answer: "343" },
+                { q: "What is the sum of angles in a triangle?", options: ["180 degrees", "360 degrees", "90 degrees"], answer: "180 degrees" },
+                { q: "What is the value of π (pi) rounded to 3 decimal places?", options: ["3.142", "3.123", "3.441"], answer: "3.142" },
+                { q: "What is 25 squared?", options: ["625", "500", "400"], answer: "625" },
+                { q: "What is the area of a circle with radius 7?", options: ["154", "49", "88"], answer: "154" },
+                { q: "What is the perimeter of a square with side length 8?", options: ["32", "16", "64"], answer: "32" },
+                { q: "What is 2^10?", options: ["1024", "512", "2048"], answer: "1024" },
+                { q: "What is the derivative of sin(x)?", options: ["cos(x)", "-sin(x)", "tan(x)"], answer: "cos(x)" },
+                { q: "What is the hypotenuse of a right triangle with legs 6 and 8?", options: ["10", "12", "14"], answer: "10" },
+                { q: "What is log base 10 of 1000?", options: ["3", "4", "2"], answer: "3" },
+                { q: "What is the sum of first 10 natural numbers?", options: ["55", "50", "45"], answer: "55" },
+                { q: "What is the LCM of 12 and 18?", options: ["36", "24", "48"], answer: "36" },
+                { q: "What is the HCF of 24 and 36?", options: ["12", "18", "24"], answer: "12" },
+                { q: "What is 9 to the power 0?", options: ["1", "9", "0"], answer: "1" },
+                { q: "What is the solution to 2x + 3 = 11?", options: ["4", "3", "5"], answer: "4" },
+                { q: "What is the decimal equivalent of 5/8?", options: ["0.625", "0.75", "0.5"], answer: "0.625" },
+                { q: "What is 1/3 of 90?", options: ["30", "45", "60"], answer: "30" }
+            ],
+            science: [
+                { q: "What planet is known as the Red Planet?", options: ["Mars", "Venus", "Jupiter"], answer: "Mars" },
+                { q: "What is the chemical symbol for water?", options: ["H2O", "O2", "CO2"], answer: "H2O" },
+                { q: "What gas do plants absorb from the atmosphere?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen"], answer: "Carbon Dioxide" },
+                { q: "What part of the cell contains genetic material?", options: ["Nucleus", "Mitochondria", "Ribosome"], answer: "Nucleus" },
+                { q: "What is the hardest natural substance on Earth?", options: ["Gold", "Iron", "Diamond"], answer: "Diamond" },
+                { q: "What is the chemical symbol for gold?", options: ["Go", "Au", "Ag"], answer: "Au" },
+                { q: "Which organ pumps blood through the body?", options: ["Lungs", "Heart", "Liver"], answer: "Heart" },
+                { q: "What is the process by which plants make their own food?", options: ["Respiration", "Photosynthesis", "Transpiration"], answer: "Photosynthesis" },
+                { q: "What type of energy is produced by the sun?", options: ["Nuclear", "Solar", "Chemical"], answer: "Solar" },
+                { q: "Which planet has the most moons?", options: ["Saturn", "Jupiter", "Mars"], answer: "Saturn" },
+                { q: "Which gas is most abundant in Earth's atmosphere?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide"], answer: "Nitrogen" },
+                { q: "What is the largest organ in the human body?", options: ["Liver", "Brain", "Skin"], answer: "Skin" },
+                { q: "What is the atomic number of hydrogen?", options: ["1", "2", "8"], answer: "1" },
+                { q: "What do bees collect and use to make honey?", options: ["Pollen", "Nectar", "Sap"], answer: "Nectar" },
+                { q: "What part of the brain controls balance?", options: ["Cerebrum", "Cerebellum", "Brainstem"], answer: "Cerebellum" },
+                { q: "What is the speed of light?", options: ["299,792 km/s", "150,000 km/s", "3,000 km/s"], answer: "299,792 km/s" },
+                { q: "What is the primary gas in the Sun?", options: ["Helium", "Oxygen", "Hydrogen"], answer: "Hydrogen" },
+                { q: "What do we call an animal that eats both plants and meat?", options: ["Herbivore", "Carnivore", "Omnivore"], answer: "Omnivore" },
+                { q: "What is the main function of red blood cells?", options: ["Fight infections", "Carry oxygen", "Digest food"], answer: "Carry oxygen" },
+                { q: "What is the most abundant element in the universe?", options: ["Helium", "Oxygen", "Hydrogen"], answer: "Hydrogen" },
+                { q: "What is the name of the first man to walk on the moon?", options: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin"], answer: "Neil Armstrong" },
+                { q: "What type of scientist studies fossils?", options: ["Geologist", "Paleontologist", "Archaeologist"], answer: "Paleontologist" },
+                { q: "What do we call a baby frog?", options: ["Tadpole", "Fry", "Cub"], answer: "Tadpole" },
+                { q: "What is the chemical symbol for sodium?", options: ["Na", "So", "S"], answer: "Na" },
+                { q: "Which is the smallest bone in the human body?", options: ["Femur", "Stapes", "Radius"], answer: "Stapes" },
+                { q: "What layer of Earth is directly below the crust?", options: ["Mantle", "Outer Core", "Inner Core"], answer: "Mantle" },
+                { q: "What is the freezing point of water in Celsius?", options: ["0°C", "32°C", "-10°C"], answer: "0°C" },
+                { q: "Which part of the plant conducts photosynthesis?", options: ["Roots", "Stem", "Leaves"], answer: "Leaves" },
+                { q: "Which blood type is the universal donor?", options: ["A", "O-", "AB+"], answer: "O-" }
+            ],
+            history: [
+                { q: "Who was the first President of the United States?", options: ["George Washington", "Abraham Lincoln", "Thomas Jefferson"], answer: "George Washington" },
+                { q: "In which year did World War II end?", options: ["1945", "1939", "1918"], answer: "1945" },
+                { q: "What was the name of the ship that brought the Pilgrims to America?", options: ["Mayflower", "Santa Maria", "Endeavour"], answer: "Mayflower" },
+                { q: "Which empire was ruled by Julius Caesar?", options: ["Roman Empire", "Byzantine Empire", "Ottoman Empire"], answer: "Roman Empire" },
+                { q: "Who discovered America in 1492?", options: ["Christopher Columbus", "Vasco da Gama", "James Cook"], answer: "Christopher Columbus" },
+                { q: "What year did the French Revolution begin?", options: ["1789", "1804", "1812"], answer: "1789" },
+                { q: "Who was known as the 'Iron Lady'?", options: ["Margaret Thatcher", "Angela Merkel", "Queen Victoria"], answer: "Margaret Thatcher" },
+                { q: "Which country built the Great Wall?", options: ["China", "Japan", "India"], answer: "China" },
+                { q: "Who was the first human to journey into space?", options: ["Yuri Gagarin", "Neil Armstrong", "Buzz Aldrin"], answer: "Yuri Gagarin" },
+                { q: "What year did the Titanic sink?", options: ["1912", "1905", "1923"], answer: "1912" },
+                { q: "Which war was fought between the North and South regions of the USA?", options: ["American Civil War", "World War I", "Revolutionary War"], answer: "American Civil War" },
+                { q: "Who wrote the Declaration of Independence?", options: ["Thomas Jefferson", "George Washington", "John Adams"], answer: "Thomas Jefferson" },
+                { q: "Which country was led by Adolf Hitler during World War II?", options: ["Germany", "Italy", "Russia"], answer: "Germany" },
+                { q: "The Cold War was mainly between which two superpowers?", options: ["USA & USSR", "China & India", "Germany & France"], answer: "USA & USSR" },
+                { q: "Who was the Egyptian queen known for her relationship with Julius Caesar?", options: ["Cleopatra", "Nefertiti", "Hatshepsut"], answer: "Cleopatra" },
+                { q: "What year did the Berlin Wall fall?", options: ["1989", "1975", "1991"], answer: "1989" },
+                { q: "Which US President was assassinated in 1865?", options: ["Abraham Lincoln", "John F. Kennedy", "Theodore Roosevelt"], answer: "Abraham Lincoln" },
+                { q: "Who was the first Emperor of China?", options: ["Qin Shi Huang", "Mao Zedong", "Confucius"], answer: "Qin Shi Huang" },
+                { q: "Which civilization built Machu Picchu?", options: ["Inca", "Aztec", "Maya"], answer: "Inca" },
+                { q: "Which country was divided into East and West by a wall?", options: ["Germany", "Korea", "Vietnam"], answer: "Germany" },
+                { q: "What was the name of the first successful English colony in America?", options: ["Jamestown", "Plymouth", "Roanoke"], answer: "Jamestown" },
+                { q: "What year did the United Nations form?", options: ["1945", "1920", "1950"], answer: "1945" },
+                { q: "Which event started World War I?", options: ["Assassination of Archduke Franz Ferdinand", "Pearl Harbor Attack", "D-Day Invasion"], answer: "Assassination of Archduke Franz Ferdinand" },
+                { q: "Who was the leader of the Soviet Union during World War II?", options: ["Joseph Stalin", "Leon Trotsky", "Vladimir Lenin"], answer: "Joseph Stalin" },
+                { q: "Which war was fought between the UK and Argentina in 1982?", options: ["Falklands War", "Vietnam War", "Gulf War"], answer: "Falklands War" },
+                { q: "Which medieval document limited the power of the English king?", options: ["Magna Carta", "Bill of Rights", "The Constitution"], answer: "Magna Carta" },
+                { q: "Who was the first Prime Minister of the United Kingdom?", options: ["Robert Walpole", "Winston Churchill", "David Lloyd George"], answer: "Robert Walpole" },
+                { q: "What year did India gain independence from Britain?", options: ["1947", "1936", "1952"], answer: "1947" },
+                { q: "Who led the Salt March in India?", options: ["Mahatma Gandhi", "Jawaharlal Nehru", "Subhas Chandra Bose"], answer: "Mahatma Gandhi" }
+            ],
+            literature: [
+                { q: "Who wrote 'Pride and Prejudice'?", options: ["Jane Austen", "Emily Brontë", "Charlotte Brontë"], answer: "Jane Austen" },
+                { q: "Which Shakespeare play features the character Hamlet?", options: ["Othello", "Macbeth", "Hamlet"], answer: "Hamlet" },
+                { q: "Who wrote '1984'?", options: ["George Orwell", "Aldous Huxley", "Ray Bradbury"], answer: "George Orwell" },
+                { q: "What is the first book in the 'Harry Potter' series?", options: ["Goblet of Fire", "Philosopher's Stone", "Order of the Phoenix"], answer: "Philosopher's Stone" },
+                { q: "Which novel features the character Jay Gatsby?", options: ["The Great Gatsby", "Of Mice and Men", "To Kill a Mockingbird"], answer: "The Great Gatsby" },
+                { q: "Who wrote 'Moby-Dick'?", options: ["Herman Melville", "Mark Twain", "Nathaniel Hawthorne"], answer: "Herman Melville" },
+                { q: "What is the real name of Mark Twain?", options: ["Samuel Clemens", "Charles Dickens", "F. Scott Fitzgerald"], answer: "Samuel Clemens" },
+                { q: "Who wrote 'To Kill a Mockingbird'?", options: ["Harper Lee", "J.D. Salinger", "John Steinbeck"], answer: "Harper Lee" },
+                { q: "Which novel starts with the line 'Call me Ishmael'?", options: ["Moby-Dick", "Dracula", "War and Peace"], answer: "Moby-Dick" },
+                { q: "Who wrote 'The Catcher in the Rye'?", options: ["J.D. Salinger", "Ernest Hemingway", "F. Scott Fitzgerald"], answer: "J.D. Salinger" },
+                { q: "Which Shakespeare play includes the character Iago?", options: ["Othello", "Hamlet", "Macbeth"], answer: "Othello" },
+                { q: "Which book is set in the dystopian world of Oceania?", options: ["1984", "Brave New World", "Fahrenheit 451"], answer: "1984" },
+                { q: "Who wrote 'The Picture of Dorian Gray'?", options: ["Oscar Wilde", "Bram Stoker", "Emily Brontë"], answer: "Oscar Wilde" },
+                { q: "Which novel features the character Elizabeth Bennet?", options: ["Pride and Prejudice", "Jane Eyre", "Wuthering Heights"], answer: "Pride and Prejudice" },
+                { q: "What is the title of the first book in 'The Lord of the Rings' series?", options: ["The Fellowship of the Ring", "The Two Towers", "The Hobbit"], answer: "The Fellowship of the Ring" },
+                { q: "Who wrote 'War and Peace'?", options: ["Leo Tolstoy", "Fyodor Dostoevsky", "Anton Chekhov"], answer: "Leo Tolstoy" },
+                { q: "Which novel features the character Atticus Finch?", options: ["To Kill a Mockingbird", "The Grapes of Wrath", "Great Expectations"], answer: "To Kill a Mockingbird" },
+                { q: "Which Greek poet wrote 'The Iliad'?", options: ["Homer", "Virgil", "Ovid"], answer: "Homer" },
+                { q: "Who wrote 'Les Misérables'?", options: ["Victor Hugo", "Gustave Flaubert", "Alexandre Dumas"], answer: "Victor Hugo" },
+                { q: "Which Charles Dickens novel features the character Ebenezer Scrooge?", options: ["A Christmas Carol", "Oliver Twist", "Great Expectations"], answer: "A Christmas Carol" },
+                { q: "Which poet wrote 'The Raven'?", options: ["Edgar Allan Poe", "Robert Frost", "Emily Dickinson"], answer: "Edgar Allan Poe" },
+                { q: "Who wrote 'One Hundred Years of Solitude'?", options: ["Gabriel García Márquez", "Pablo Neruda", "Jorge Luis Borges"], answer: "Gabriel García Márquez" },
+                { q: "Which Russian novel is about a man who commits a murder and struggles with guilt?", options: ["Crime and Punishment", "The Brothers Karamazov", "Anna Karenina"], answer: "Crime and Punishment" },
+                { q: "Who wrote 'Frankenstein'?", options: ["Mary Shelley", "Bram Stoker", "H.G. Wells"], answer: "Mary Shelley" },
+                { q: "Which novel is about a boy named Pip and his journey through life?", options: ["Great Expectations", "David Copperfield", "Oliver Twist"], answer: "Great Expectations" },
+                { q: "Who wrote 'Wuthering Heights'?", options: ["Emily Brontë", "Charlotte Brontë", "Anne Brontë"], answer: "Emily Brontë" },
+                { q: "What is the name of the detective in 'Sherlock Holmes' stories?", options: ["Sherlock Holmes", "Hercule Poirot", "Philip Marlowe"], answer: "Sherlock Holmes" },
+                { q: "Who wrote 'Don Quixote'?", options: ["Miguel de Cervantes", "Gustave Flaubert", "Molière"], answer: "Miguel de Cervantes" },
+                { q: "Which dystopian novel features a world ruled by 'Big Brother'?", options: ["1984", "Fahrenheit 451", "Brave New World"], answer: "1984" }
+            ],
+            astronomy: [
+                { q: "Which is the largest planet in our solar system?", options: ["Jupiter", "Saturn", "Earth"], answer: "Jupiter" },
+                { q: "What is the closest star to Earth?", options: ["Proxima Centauri", "Sirius", "Alpha Centauri"], answer: "Proxima Centauri" },
+                { q: "Which planet is known as the Red Planet?", options: ["Mars", "Venus", "Mercury"], answer: "Mars" },
+                { q: "What is the name of our galaxy?", options: ["Milky Way", "Andromeda", "Triangulum"], answer: "Milky Way" },
+                { q: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Neptune"], answer: "Saturn" },
+                { q: "What is the brightest star in the night sky?", options: ["Sirius", "Betelgeuse", "Vega"], answer: "Sirius" },
+                { q: "Which planet has a day longer than its year?", options: ["Venus", "Mercury", "Mars"], answer: "Venus" },
+                { q: "What is the main gas in the Earth's atmosphere?", options: ["Nitrogen", "Oxygen", "Carbon Dioxide"], answer: "Nitrogen" },
+                { q: "What is the name of the first man to walk on the moon?", options: ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin"], answer: "Neil Armstrong" },
+                { q: "What is the name of the largest asteroid in the asteroid belt?", options: ["Ceres", "Vesta", "Pallas"], answer: "Ceres" },
+                { q: "Which planet is known for its beautiful rings?", options: ["Saturn", "Jupiter", "Uranus"], answer: "Saturn" },
+                { q: "What is the smallest planet in our solar system?", options: ["Mercury", "Mars", "Pluto"], answer: "Mercury" },
+                { q: "Which space telescope was launched in 1990?", options: ["Hubble Space Telescope", "James Webb Space Telescope", "Spitzer Space Telescope"], answer: "Hubble Space Telescope" },
+                { q: "What is the largest moon in the solar system?", options: ["Ganymede", "Titan", "Europa"], answer: "Ganymede" },
+                { q: "Which planet has the Great Red Spot?", options: ["Jupiter", "Saturn", "Neptune"], answer: "Jupiter" },
+                { q: "Which celestial body orbits the Earth?", options: ["The Moon", "Mars", "Venus"], answer: "The Moon" },
+                { q: "Which planet is farthest from the Sun?", options: ["Neptune", "Uranus", "Pluto"], answer: "Neptune" },
+                { q: "What type of galaxy is the Milky Way?", options: ["Spiral", "Elliptical", "Irregular"], answer: "Spiral" },
+                { q: "What is the sun mostly made of?", options: ["Hydrogen", "Oxygen", "Carbon"], answer: "Hydrogen" },
+                { q: "What is the second largest planet in the solar system?", options: ["Saturn", "Neptune", "Jupiter"], answer: "Saturn" },
+                { q: "What is the name of the first artificial satellite?", options: ["Sputnik 1", "Voyager 1", "Hubble"], answer: "Sputnik 1" },
+                { q: "Which planet is tilted on its side?", options: ["Uranus", "Neptune", "Saturn"], answer: "Uranus" },
+                { q: "Which planet has the highest mountain in the solar system?", options: ["Mars", "Earth", "Venus"], answer: "Mars" },
+                { q: "Which planet is the hottest in the solar system?", options: ["Venus", "Mercury", "Mars"], answer: "Venus" },
+                { q: "What is a black hole?", options: ["A region of space with strong gravity", "A type of star", "A kind of planet"], answer: "A region of space with strong gravity" },
+                { q: "Which mission landed the first humans on the Moon?", options: ["Apollo 11", "Apollo 13", "Apollo 8"], answer: "Apollo 11" },
+                { q: "What is the term for a star explosion?", options: ["Supernova", "Black Hole", "Quasar"], answer: "Supernova" },
+                { q: "What do we call a rocky object that enters Earth's atmosphere and burns up?", options: ["Meteor", "Asteroid", "Comet"], answer: "Meteor" },
+                { q: "Which planet is sometimes called Earth's twin?", options: ["Venus", "Mars", "Mercury"], answer: "Venus" },
+                { q: "What force keeps planets in orbit around the Sun?", options: ["Gravity", "Magnetism", "Radiation"], answer: "Gravity" }
+            ]
+        };
+
+        let selectedTopic = "";
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        let questionLimit = 5;
+        let optionsEnabled = true;
+
+        function startQuiz() {
+            selectedTopic = document.getElementById("topics").value;
+            questionLimit = parseInt(document.getElementById("question-count").value);
+            shuffledQuestions = [...questions[selectedTopic]].sort(() => Math.random() - 0.5).slice(0, questionLimit);
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById("topic-selection").classList.add("hidden");
+            document.getElementById("quiz-container").classList.remove("hidden");
+            document.getElementById("result").classList.add("hidden");
+            document.getElementById("restart-btn").classList.add("hidden");
+            document.getElementById("feedback").textContent = "";
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                showResult();
+                return;
+            }
+
+            const questionData = shuffledQuestions[currentQuestionIndex];
+            document.getElementById("question").textContent = questionData.q;
+            document.getElementById("options").innerHTML = "";
+            optionsEnabled = true;
+            
+            questionData.options.forEach(option => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.className = "btn btn-option btn-outline-primary";
+                button.onclick = () => checkAnswer(option, questionData.answer);
+                document.getElementById("options").appendChild(button);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            if (!optionsEnabled) return;
+            
+            document.getElementById("feedback").textContent = selected === correct ? "Correct!" : "Wrong! The correct answer is: " + correct;
+            document.getElementById("feedback").className = selected === correct ? "correct" : "wrong";
+            
+            if (selected === correct) score++;
+            
+            // Disable all option buttons after an answer is selected
+            optionsEnabled = false;
+            const buttons = document.querySelectorAll(".btn-option");
+            buttons.forEach(button => {
+                if (button.textContent === correct) {
+                    button.classList.remove("btn-outline-primary");
+                    button.classList.add("btn-success");
+                } else if (button.textContent === selected && selected !== correct) {
+                    button.classList.remove("btn-outline-primary");
+                    button.classList.add("btn-danger");
+                }
+            });
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            document.getElementById("feedback").textContent = "";
+            document.getElementById("feedback").className = "";
+            showQuestion();
+        }
+        
+        function showResult() {
+            document.getElementById("quiz-container").classList.add("hidden");
+            document.getElementById("result").classList.remove("hidden");
+            document.getElementById("restart-btn").classList.remove("hidden");
+            document.getElementById("result").textContent = `Quiz finished! Your score: ${score}/${questionLimit}`;
+        }
+        
+        function restartQuiz() {
+            document.getElementById("topic-selection").classList.remove("hidden");
+            document.getElementById("result").classList.add("hidden");
+            document.getElementById("restart-btn").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>
